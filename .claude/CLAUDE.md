@@ -15,6 +15,8 @@ Always bump `.claude-plugin/plugin.json` when changing the plugin. Use semver: p
 - `hooks/hooks.json`: 5 hook registrations, using exec-form `command` + `args`
 - `hooks/lib/teach-guard.sh`: project opt-in, JSON input validation, DB path, context output
 - `hooks/lib/review-context.jq`: portable calendar dates and bounded review queues
+- `hooks/lib/runtime.sh`, `hooks/lib/json.sh`, `hooks/lib/json_fallback.py`: capability detection and equivalent jq/Python JSON operations; no runtime downloads
+- `hooks/check-runtime.sh`: optional read-only troubleshooting check, not an onboarding requirement
 - `tests/`: focused hook and demo regression checks
 
 Keep skill/hook counts in README badges and this guide in sync if components change. Plugin files are read-only inputs at runtime; student data lives outside the cache.
@@ -29,6 +31,18 @@ Keep skill/hook counts in README badges and this guide in sync if components cha
 6. Never replace unrelated project settings/hooks or the whole project CLAUDE.md during onboarding. Setup/reset are manual-only skills.
 7. All skills honor `CLAUDE_TEACHER_DB` using the shared contract. Quiz IDs are stable per attempt; passive engagement and repeated saves must not reschedule assessments.
 8. Reference bundled files with `${CLAUDE_PLUGIN_ROOT}` or `${CLAUDE_SKILL_DIR}`. Use namespaced `/claude-teacher:<skill>` commands to avoid collisions.
+9. Exercise the hook suite with each JSON backend in isolation. When neither backend is available, hooks must remain quiet. The project lesson instructions still direct Claude to load progress and save new learning. Run Python in isolated mode without writing cache files.
+10. Keep onboarding accessible to beginners: ask only for a missing topic and starting level, make personalization optional, and never require students to install helper tools or manage a technical mode. Explain real save/access failures and never claim unverified success.
+
+## Hook readability
+
+- Keep event flow explicit: runtime check, project guard, event filters, output.
+- Loading a helper must not run checks or exit the caller.
+- Use descriptive names and small functions; expand dense conditions and nested formatting.
+- Keep emitted teaching instructions readable in the event script or review formatter.
+- Parse input as data. Do not add eval, encoded code, dynamic code generation, or runtime downloads.
+- Explain expected silent failures; do not hide programming errors behind broad exception handlers.
+- Keep `hooks/README.md` accurate about file access, external commands, and effects.
 
 ## Validation
 

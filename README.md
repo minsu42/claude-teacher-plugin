@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="#installation"><img src="https://img.shields.io/badge/Claude_Code-plugin-blue?style=flat-square" alt="Claude Code Plugin"/></a>
+  <a href="#quick-start"><img src="https://img.shields.io/badge/Claude_Code-plugin-blue?style=flat-square" alt="Claude Code Plugin"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License"/></a>
   <a href="#skills"><img src="https://img.shields.io/badge/skills-15-orange?style=flat-square" alt="15 Skills"/></a>
   <a href="#hooks"><img src="https://img.shields.io/badge/hooks-5-purple?style=flat-square" alt="5 Hooks"/></a>
@@ -27,32 +27,46 @@ Most AI tools give you the answer and move on. **Claude Teacher makes you earn i
 
 ---
 
-## Requirements
-
-- Current Claude Code. This release is validated with **2.1.260** and uses exec-form hook arguments and Stop `additionalContext`.
-- Bash and **jq 1.6+** on `PATH` (macOS/Linux; Windows users can use WSL). Without jq, hooks exit quietly; manual skills remain available.
-- Network access for source research and the demo's CDN libraries. Missing research tools are disclosed; teaching can continue from verified material.
-
 ## Quick Start
 
-```bash
-# 1. Add the marketplace (one time)
-claude plugin marketplace add https://github.com/yarikleto/claude-teacher-plugin
+Open Claude Code in the folder where you want to learn. Paste these commands into the Claude Code conversation, one at a time:
 
-# 2. Install in your project
-cd your-project
-claude plugin install claude-teacher@claude-teacher-marketplace --scope project
-```
+1. Add Claude Teacher to the available plugins:
 
-Then run `/claude-teacher:init-edu` once in that project. It walks you through onboarding and marks the folder as a learning project.
+   ```text
+   /plugin marketplace add yarikleto/claude-teacher-plugin
+   ```
 
-> Teaching mode activates only in projects you have run `/claude-teacher:init-edu` in. Everywhere else Claude behaves normally, so you can install the plugin at user scope without turning every repo into a classroom.
+2. Install it. When Claude asks where to install, choose **Project**:
+
+   ```text
+   /plugin install claude-teacher@claude-teacher-marketplace
+   ```
+
+3. Start your learning setup:
+
+   ```text
+   /claude-teacher:init-edu
+   ```
+
+Claude asks what you want to learn and whether you've tried it before, then starts the first lesson. If you've already answered, it skips those questions. You can add personal preferences later.
+
+If the setup command isn't visible after installation, enter `/reload-plugins` and try again. These steps use Claude Code's [built-in plugin installer](https://code.claude.com/docs/en/discover-plugins).
+
+> Teaching instructions are added only to folders where you run `/claude-teacher:init-edu`. Your other projects keep their usual behavior.
+
+## Requirements
+
+- Claude Code installed and signed in, with permission to read and write your learning files. This release's plugin integration is validated with **2.1.260**.
+- Network access for source research and the demo's CDN libraries. Missing research tools are disclosed; teaching can continue from verified material.
+
+Extra hook reminders use existing local tools when available. They are not a setup task for the student; technical details are in [Hooks](#hooks). The plugin does not install helper software.
 
 ---
 
 ## What Happens After Setup
 
-Teaching mode is active in initialized projects and respects your pace and requests to pause. No commands needed. Just talk to Claude:
+Teaching mode is active in initialized projects and respects your pace and requests to pause. Just talk to Claude:
 
 > *"Explain compound interest"* or *"Teach me about TCP sockets"* or *"Help me understand recursion"*
 
@@ -60,12 +74,14 @@ The tutor will:
 
 1. Research new or uncertain claims using authoritative sources and provide links
 2. Explain using analogies from **your** interests
-3. Adapt tone and vocabulary to **your age** (a 14-year-old and a 35-year-old get very different explanations)
-4. Teach in the style of **your ideal teacher** — strict professor, friendly mentor, no-nonsense coach — whatever you described during setup
+3. Adapt tone and vocabulary to your demonstrated understanding and preferences; age is optional
+4. Start with clear, friendly explanations and adapt to the teacher style you prefer
 5. Quiz you after 2-3 concepts
 6. Ask "explain your thinking" to catch right-answer-wrong-reasoning
-7. Track everything in your personal knowledge DB
-8. Checkpoint unsaved progress after responses; use `/claude-teacher:summary` when ending a lesson
+7. Record new learning evidence in your local progress files
+8. Save new evidence during the lesson and give a recap when you say you are finished
+
+These are instructions Claude follows using its tools, with or without hook reminders. A save is complete only after the files are written successfully; Claude should tell you if saving fails. You can also ask “show my progress” or use the explicit skill commands below.
 
 ---
 
@@ -76,13 +92,14 @@ The tutor will:
 <details>
 <summary>Full onboarding in one command</summary>
 
-**Student profile (first time only) — 9 questions, one at a time:**
-- Preferred name and optional age; personal questions can be skipped
-- Current level and what you already know (to build on it)
-- How you learn best and what frustrates you
-- Goals with deadlines
-- Interests (used for analogies)
-- **Your ideal teacher** — describe the vibe: strict, funny, patient, direct, etc.
+**Two starting questions, only if you haven't already answered:**
+
+- What would you like to learn or build?
+- Have you tried it before, or are you starting from scratch?
+
+“Not sure” is fine. Claude starts gently and adjusts from your answers. Your name, age, interests, goals, and preferred teacher style are optional; share them when useful rather than completing a long questionnaire first.
+
+Setup uses Claude Code's available tools. There is no required dependency diagnostic or technical mode to choose. The project instructions tell Claude to load earlier progress, suggest relevant reviews, and save new learning even when hooks are unavailable.
 
 **Project setup:**
 - `CLAUDE.md` — a managed teaching block, preserving existing project instructions; the personal profile stays in the global DB
@@ -254,7 +271,7 @@ Full DB flush at session end. Shows what was learned, quiz results, depth change
 
 ### `/claude-teacher:save-progress` — Mid-Session Checkpoint
 
-Quick save without ending the session. Use anytime you want a safety checkpoint.
+Saves new learning evidence without ending the session, preserving existing history and skipping duplicate events. Use anytime you want a checkpoint, including when automatic hooks are unavailable.
 
 ### `/claude-teacher:flashcards [topic]` — Anki-Style Flashcard Generation
 
@@ -302,17 +319,31 @@ Deletes the resolved global education DB (including global saved explanations) a
 
 ## Hooks
 
-5 hooks that automate the teaching workflow. The plugin registers all of them itself, so they survive plugin updates — no per-project wiring.
+5 hooks provide extra reminders and a prepared review summary alongside the project teaching instructions. The plugin registers them itself, so they survive plugin updates — no per-project wiring. The lesson instructions and skills remain usable when these reminders are unavailable.
 
-Every hook checks `.claude/claude-teacher.json`; legacy projects with `memory/knowledge_gaps.md` also activate. Set `enabled: false` in the marker to pause hook reminders. Invalid markers, malformed hook payloads, and subagent activity are ignored.
+Each hook explicitly checks runtime availability, then validates the event and checks `.claude/claude-teacher.json`; legacy projects with `memory/knowledge_gaps.md` also activate. Set `enabled: false` in the marker to pause hook reminders. Invalid markers, malformed hook payloads, and subagent activity are ignored.
+
+Hooks require Bash and use **jq 1.6+**, falling back to installed **Python 3.8+** with its standard library when jq is missing or unusable. Both paths apply the same project and loop guards. If neither JSON tool works, the scripts exit quietly without touching student data; Claude is still instructed to handle the lesson and checkpoint new evidence through the skills.
+
+The hook scripts target macOS, Linux, and WSL. Native Windows without Bash has not been validated; the registered shell hooks cannot run there. The teaching instructions themselves do not require jq or Python. Setup does not ask learners to install tools to enable extra reminders.
+
+For requested troubleshooting, [check-runtime.sh](hooks/check-runtime.sh) reports whether the hook helpers are usable. A successful check confirms tool availability; it does not prove hooks loaded or progress was saved. It is not part of normal onboarding.
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
 | **session-start-load-db** | Session start/resume | Loads profile and up to five topics per review category, using calendar dates; excludes untaught topics |
-| **inject-teach-context** | Every message | Injects teaching-mode rules into every prompt — keeps Claude in tutor mode, enforces research-before-explaining and auto-save |
+| **inject-teach-context** | Every message | Reminds Claude to tutor at the student's pace, verify uncertain claims, and save new learning evidence |
 | **stop-save-progress** | End of each response | Requests one checkpoint of unsaved learning evidence; checks the loop guard before continuing |
 | **post-code-review** | After Claude uses Edit/Write on source | Suggests a relevant reasoning question for exercises; does not observe edits in your editor |
 | **post-quiz-motivate** | After Bash tool failure | Suggests guidance for exercise failures, excluding cancellations and simple housekeeping |
+
+### Readable code and data access
+
+The hooks are plain Bash, jq, and Python source with descriptive names, small functions, and readable teaching instructions. Loading a helper only defines functions; runtime checks and exit decisions are explicit in the event scripts. JSON input is parsed as data, never evaluated as code. Expected input failures are handled quietly; Python programming errors remain visible for diagnosis.
+
+The hook code reads the project marker and relevant education records, then returns context to Claude. It makes no network requests, installs no software, and does not write student files itself. The session summary includes student and topic labels. The Stop hook asks Claude to save through the save-progress skill; the save still depends on Claude completing that action and having permission.
+
+For a manual review, start with the [hook code guide](hooks/README.md) and [event registrations](hooks/hooks.json). The guide maps every event to its script and documents file access, outputs, runtime selection, and failure handling.
 
 ---
 
@@ -348,16 +379,20 @@ Quiz records use a unique ID per attempt, so repeated quizzes on the same topic/
 
 ### Spaced Repetition
 
-At session start, the hook scans topic records, skips untaught or invalid records, and summarizes the most urgent reviews. Calendar arithmetic avoids daylight-saving errors:
+When automatic hooks are available, the session-start hook scans topic records, skips untaught or invalid records, and shows up to five topics per review category. It orders overdue topics by days overdue and uses calendar dates to avoid daylight-saving errors. An example summary:
 
 ```
-OVERDUE (quiz these first):
-  - Compound interest (3d overdue, working, interval: 4d)
-  - TCP basics (1d overdue, surface, interval: 1d)
+OVERDUE FOR REVIEW (1 total; showing up to 5):
+- Compound interest [learned] — 3d overdue
 
-WEAK (re-explain before new material):
-  - OSI model (weak, surface)
+DUE FOR REVIEW TODAY (1 total; showing up to 5):
+- TCP basics [solid]
+
+WEAK TOPICS (1 total; showing up to 5):
+- OSI model [weak]
 ```
+
+Reviews are suggestions that respect the student's current request and pace. Without the prepared hook summary, the lesson instructions ask Claude to read the relevant records itself. Ask “show my progress” or use `/claude-teacher:progress` for the full queue.
 
 Completed assessments update intervals once: ≥80% doubles the interval, <50% resets it to one day, and intermediate scores retain it. Diagrams, reading, repeated saves, and unfinished quizzes do not advance review dates:
 
@@ -395,9 +430,11 @@ The tutor calibrates vocabulary and examples automatically:
 
 ## Example Workflow
 
+The commands below are optional shortcuts. You can also ask for a quiz, request your progress, or say you are finished in ordinary conversation. Where available, hooks supply extra reminders; the project instructions cover the same lesson routine without them.
+
 ```
 Day 1:
-  /claude-teacher:init-edu                      Onboarding — name, age, background, ideal teacher, topic
+  /claude-teacher:init-edu                      Pick a topic and starting level; personalize later
   "explain compound interest"    Researches, explains with your analogies, saves to docs/
   /claude-teacher:ascii growth over time         ASCII chart + sources
   /claude-teacher:demo TCP handshake               Animated step-by-step in browser
@@ -405,7 +442,7 @@ Day 1:
   /claude-teacher:summary                       Recap + spaced repetition schedule
 
 Day 2:
-  (hook at session start)        "compound-interest is 1d overdue — quiz first"
+  (hook at session start)        Suggests reviewing compound interest, 1d overdue
   /claude-teacher:quiz-me compound interest     Targets your misconceptions first
   /claude-teacher:compare REST vs GraphQL       Side-by-side comparison with scenarios
   (continue learning)            New concepts with periodic quizzes
@@ -423,7 +460,9 @@ Day 3:
 
 ## Re-initialization
 
-Run `/claude-teacher:init-edu` again in any project:
+Run `/claude-teacher:init-edu` again to update preferences or set up another learning folder. It preserves your learning history and refreshes the managed teaching instructions. Earlier plugin-owned “manual mode” notes are replaced with the lesson routine; real unresolved file-access problems are still reported.
+
+For an existing profile, it offers:
 
 ```
 Welcome back! What would you like to do?
@@ -457,6 +496,8 @@ claude plugin validate . --strict
 ```
 
 Validate both manifests: `.` selects the marketplace. See [.claude/CLAUDE.md](.claude/CLAUDE.md) for development rules and [CHANGELOG.md](CHANGELOG.md) for changes.
+
+The hook suite tests jq and Python separately, including missing or broken tools, project opt-out, malformed data, checkpoint loop protection, import isolation, and a 500-topic review queue. To exercise both backends, install jq and Python in the development environment; jq-specific tests are skipped if jq is absent. Node.js is used for the demo tests, not by the hooks.
 
 The integration follows the official [plugin reference](https://code.claude.com/docs/en/plugins-reference), [hook reference](https://code.claude.com/docs/en/hooks), and [skill authoring docs](https://code.claude.com/docs/en/skills). The flashcard format follows [Anki's text-import headers](https://docs.ankiweb.net/importing/text-files.html#file-headers).
 

@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.10.0
+
+- Start lessons after a topic and starting-level question; skip answers already supplied and leave personal preferences optional for later.
+- Remove the required runtime check and manual-mode handoff from onboarding. Keep the runtime script as an optional diagnostic and do not ask learners to install helper tools.
+- Include loading progress, saving new learning, and ending lessons in the managed project instructions, whether or not hook reminders run. Recognize ordinary requests such as “save this” and “I'm done for today.”
+- Keep validation, permission handling, and truthful save reporting in the shared data contract. These routines depend on Claude following the instructions and completing its file operations; hook tests do not establish end-to-end teaching reliability.
+- Update the README with installation inside Claude Code, the shorter onboarding flow, and the remaining platform limits of the optional Bash hooks. Existing users can rerun init-edu to refresh their managed teaching block without resetting history.
+
+## 1.9.4
+
+- Sync the README with runtime fallback, manual saving, explicit hook checks, and the hook review guide. Clarify checkpoint requests, review summaries, repeat setup, and development dependencies.
+
+## 1.9.3
+
+- Make runtime checks explicit in each event script; loading helpers no longer runs checks or exits the hook.
+- Expand JSON operations, review formatting, and teaching instructions for manual review. Use descriptive names and limit Python exception handling to expected input and file errors.
+- Add a hook code guide covering entry points, data access, output, and failure handling, plus readability rules for future changes.
+
+## 1.9.2
+
+- Make jq optional when Python 3.8+ is already installed. Probe JSON capabilities and use the Python standard library when jq is missing or broken; no packages are downloaded or installed.
+- Check automatic-feature support during onboarding and repeat setup. Explain manual saving when support is unavailable and preserve that limitation in the project's teaching instructions.
+- Keep project opt-in, malformed-input handling, review limits, and checkpoint loop protection on both JSON backends. Run Python in isolated mode without writing cache files, and process the topic queue in one Python invocation.
+- Add regression coverage for both backends, unavailable/broken tools, escaped labels, Python import isolation, and a 500-topic review queue.
+
 ## 1.9.1 — 2026-09-06
 
 ### Fixes

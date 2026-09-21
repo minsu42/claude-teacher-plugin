@@ -1,6 +1,6 @@
 ---
 name: save-progress
-description: Use when the student wants to checkpoint their progress mid-session — flushes all current session state to the global education DB without ending the session
+description: Save new learning evidence after explanations or assessments, or when the student says "save this". Preserve existing records and avoid duplicate events without ending the lesson. Does not require a hook reminder.
 ---
 
 

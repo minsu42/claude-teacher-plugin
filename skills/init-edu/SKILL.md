@@ -10,6 +10,10 @@ Before accessing education data, read `${CLAUDE_PLUGIN_ROOT}/references/educatio
 
 ## 1. Inspect before changing files
 
+Keep setup focused on learning. Use Claude Code's available file tools and host shell for setup and data operations. Do not ask the student to install jq, Python, packages, or a new shell, edit PATH, or run terminal diagnostics. Do not install tools automatically.
+
+Hook reminders are an optional reinforcement of the project teaching instructions. Do not run `hooks/check-runtime.sh` as a required onboarding step, make lessons conditional on it, or label the student as being in "manual mode". That read-only check is available for requested troubleshooting when Bash is already usable. Never claim that hooks are active unless verified. A real file-access or save failure must still be explained plainly; do not hide it or weaken the data contract to finish setup.
+
 Read the project `CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/settings.json`, `.claude/claude-teacher.json`, and existing `<education-db>/student.json` and `dashboard.json`, when present.
 
 - Preserve all unrelated instructions, settings, hooks, and student work. If a JSON file is invalid, report it and recover it before updating.
@@ -19,31 +23,28 @@ Read the project `CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/settings.json`, `.cl
 
 ## 2. Onboard a new student
 
-Ask one question at a time and wait for the answer. The student may skip personal questions; save unknown values as `null` or empty arrays. Do not require an age or infer one.
+Ask only what is missing, one question at a time:
 
-1. What should I call you?
-2. How old are you, or would you prefer to skip that?
-3. What is your current level: beginner, some experience, intermediate, or advanced?
-4. What subjects or skills do you already know well?
-5. Which learning approaches do you prefer: diagrams, examples first, analogies, theory first, hands-on practice, or a mix?
-6. What frustrates you when learning?
-7. What are your goals and any deadlines?
-8. What interests or hobbies could I use for examples?
-9. How would you describe your ideal teacher's tone and approach?
+1. What would you like to learn or build?
+2. Have you tried it before, or are you starting from scratch?
 
-Save an object in `<education-db>/student.json` after collecting the answers:
+Accept "not sure" and choose a gentle introductory lesson. If the student already supplied the topic and level, proceed to setup. Default to clear, friendly explanations and examples; adapt from their responses.
+
+Personalization is optional and can happen during later lessons or on repeat setup: preferred name, age, known subjects, learning preferences, frustrations, goals, interests, and ideal teacher style. Do not delay the first lesson for a questionnaire. Do not infer an age from the plugin's audience. Save unknown values as `null` or empty arrays and record only preferences the student actually supplied.
+
+Save an object in `<education-db>/student.json` using the supplied information:
 
 ```json
 {
-  "name": "preferred name",
+  "name": null,
   "age": null,
-  "level": "beginner",
+  "level": null,
   "known_subjects": [],
   "learning_style": [],
   "frustrations": [],
-  "goals": [{"goal": "student's goal", "deadline": null}],
+  "goals": [],
   "interests": [],
-  "teacher_persona": "student's own description"
+  "teacher_persona": null
 }
 ```
 
@@ -51,7 +52,7 @@ Use a number for an age supplied by the student and real `YYYY-MM-DD` dates for 
 
 ## 3. Choose the project focus
 
-Ask the learning type, then the topic, one question at a time if not already known:
+Use the topic supplied above. Choose the learning type from the student's stated task; use `mixed` if it is unclear. Ask a follow-up only when it would change the first lesson:
 
 - `project`: building something
 - `subject`: studying a subject or field
@@ -105,6 +106,7 @@ Read `${CLAUDE_SKILL_DIR}/references/project-context.md`. Adapt it to the chosen
 - If no block exists, append one after the existing content. For legacy teaching instructions, identify the old teaching section and merge without duplicating or removing unrelated guidance.
 - If markers are duplicated or unbalanced, do not guess at a replacement boundary; report the ambiguity first.
 - Respect project rules outside the block. The plugin's own developer guide is not runtime tutoring context.
+- Always include the template's lesson-start, checkpoint, and lesson-ending instructions. They apply whether or not hooks run. On repeat setup, replace earlier plugin-owned "manual mode" notes inside the managed block with these instructions; preserve unrelated notes and real unresolved data-access problems.
 
 ## 7. Initialize the dashboard without resetting history
 
@@ -129,6 +131,6 @@ Append one `session_start` setup event with a unique `event_id`, current time, `
 
 ## 8. Confirm actual changes
 
-Briefly report the chosen focus, resolved DB path, and files created/updated. Mention any settings preserved or migration entries needing attention. Do not claim hooks saved data or loaded settings that have not been verified.
+Briefly confirm the topic and the first learning step. Explain that progress is kept in local files and that the student can say "save this" or "I'm done for today". Keep command lists and file inventories out of the normal welcome; provide exact paths or changes when requested or needed to resolve a problem. Mention unresolved data-access or migration issues clearly. Do not claim hooks saved data, settings loaded, or progress was saved unless verified.
 
-Offer the first learning step. Explain that `/claude-teacher:progress` shows tracked knowledge and `/claude-teacher:summary` ends a lesson with a recap. If newly installed plugin components are not loaded, use `/reload-plugins` or restart Claude Code.
+Start the first learning step. Slash commands remain available as shortcuts, but the student does not need to learn them. If newly installed plugin components are not loaded, help reload them or restart Claude Code.

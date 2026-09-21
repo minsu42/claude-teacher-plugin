@@ -4,7 +4,7 @@ Read this before accessing the education database. These rules apply to every te
 
 ## Resolve paths
 
-- Resolve `<education-db>` once from `CLAUDE_TEACHER_DB`, defaulting to `$HOME/.local/share/claude-education`. Use Bash to read the environment, for example `printf '%s\n' "${CLAUDE_TEACHER_DB:-$HOME/.local/share/claude-education}"`. Require an absolute path. Never use `eval` or paste a topic, path, or `$ARGUMENTS` into shell source.
+- Resolve `<education-db>` once from `CLAUDE_TEACHER_DB`, defaulting to `.local/share/claude-education` inside the user's home directory. Use environment information already available in the session or the existing host shell; do not guess the home path or install a shell. In Bash, for example, `printf '%s\n' "${CLAUDE_TEACHER_DB:-$HOME/.local/share/claude-education}"` reads the configured path. Require an absolute path. Never use `eval` or paste a topic, path, or `$ARGUMENTS` into shell source.
 - Quote shell paths and use the resolved absolute path with Read/Write/Edit. Never store student data inside the plugin installation; updates replace that directory.
 - Use existing topic slugs. For a new slug, use lowercase ASCII letters/digits separated by hyphens (`^[a-z0-9]+(-[a-z0-9]+)*$`), with no slash, `..`, or shell syntax. Check collisions before creating a file.
 - If the profile is missing, suggest `/claude-teacher:init-edu`. A requested explanation or visual can still work without personalization; do not create a partial DB or activate learning mode implicitly.
@@ -13,6 +13,7 @@ Read this before accessing the education database. These rules apply to every te
 
 ## Merge and persist
 
+- Use the available file tools and host shell. jq and Python are optional hook helpers, not prerequisites for invoking teaching or saving skills. Do not ask the student to install tools. If an operation or verification cannot be completed with the available tools and permissions, preserve existing records and explain the failed operation; do not claim it succeeded.
 - Read the latest file before updating; preserve unknown fields, `first_seen`, prior scores, notes, and misconception history. Merge new evidence instead of rewriting from an earlier session snapshot.
 - Write valid JSON to a temporary sibling, validate it, then atomically rename it over the target. This avoids partial files; it does not make concurrent writes transactional. If another session changed the original during the save, re-read and merge instead of overwriting it. Do not claim support for simultaneous writers without a lock.
 - Each assessment gets one stable unique `quiz_id`/`event_id` (UUID) when it starts. Save quizzes as `quizzes/<date>_<topic-slug>_<quiz-id>.json`; reuse the same ID when checkpointing or finalizing that attempt. A second quiz gets a new ID, even on the same day.

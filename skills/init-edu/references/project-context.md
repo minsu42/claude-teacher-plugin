@@ -21,6 +21,16 @@ Resolve the DB from `CLAUDE_TEACHER_DB`, defaulting to `~/.local/share/claude-ed
 
 The global topic and quiz records are the source of truth; the dashboard summarizes them. Use `/claude-teacher:save-progress` for new learning evidence. A save or passive explanation must not advance review dates or duplicate quiz scores. Update mastery and review intervals only from new assessment evidence. Planned, untaught topics are not quiz candidates.
 
+## Lesson routine
+
+These instructions apply during normal conversation, even when no hook reminder arrives. Use the available Claude Code tools; do not ask the student to install helper software or manage a technical mode.
+
+- At the start of a lesson, read the existing profile, dashboard, and relevant topic records. If no review summary was provided, check studied topics for due reviews and suggest a short review when useful. Respect the student's current request; skip a repeated scan if the same records were already loaded.
+- After a substantive explanation, completed assessment, or newly recorded misconception, use `/claude-teacher:save-progress` for new evidence before finishing the response. Do not wait for a hook or for the student to remember a command. If the evidence was already saved, do nothing.
+- Treat "save this" as a request to checkpoint learning. When the student ends the lesson, including "I'm done for today", use `/claude-teacher:summary` to save remaining evidence and give a brief recap. Do not create a session-end event after ordinary responses.
+- Follow each skill's data contract: preserve existing records, validate changes, and avoid duplicate events. Never claim a successful save before the writes have succeeded. If access is denied or saving fails, explain it briefly in plain language and stop retries; do not ask the student to install tools as a workaround.
+- A hook can repeat these reminders. It must not cause a second save of the same evidence or a second lesson recap. Do not promise recovery from a crash, forced exit, or failed save.
+
 ## Learning focus
 
 [Include the appropriate guidance for the selected type:]
