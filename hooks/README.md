@@ -1,7 +1,14 @@
 # Reading the hook code
 
 Start with [hooks.json](hooks.json). It lists the five events and the Bash
-script Claude Code runs for each. Paths are passed as separate arguments.
+script Claude Code runs for each. Every hook is registered in the shell form
+(`"command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/<script>.sh\""`) rather than
+the exec form (`"command": "bash"` with a separate `args` list). Claude Code
+runs the shell form through Git Bash on Windows, whereas the exec form resolves
+`bash` on `PATH`, where `C:\WINDOWS\system32\bash.exe` (the WSL launcher) is
+usually found before Git Bash and cannot open a Windows path, so the hook exits
+with status 127. The script path is quoted so plugin cache paths containing
+spaces still work.
 
 Each event script follows the same order:
 

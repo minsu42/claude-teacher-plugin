@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import sys
@@ -48,6 +49,18 @@ class HookChecks:
         self.write(self.project / '.claude/claude-teacher.json',
                    {'enabled': True, 'topic': 'Recursion', **extra})
 
+    def hook_command(self, handler):
+        """Split the shell-form command and substitute the plugin root after splitting.
+
+        hooks.json uses the shell form (`bash "${CLAUDE_PLUGIN_ROOT}/hooks/x.sh"`)
+        rather than the exec form (`command` + `args`) so that Claude Code runs the
+        scripts through Git Bash on Windows. Splitting first, then substituting,
+        keeps a plugin path containing spaces as a single argument.
+        """
+        words = shlex.split(handler['command']) + list(handler.get('args', []))
+        self.assertEqual(words[0], 'bash')
+        return [w.replace('${CLAUDE_PLUGIN_ROOT}', str(self.plugin)) for w in words]
+
     def invoke(self, event, raw=None, **fields):
         payload = {'cwd': str(self.project), 'session_id': 'test-session',
                    'hook_event_name': event, 'stop_hook_active': False,
@@ -56,8 +69,7 @@ class HookChecks:
                    'tool_input': {'file_path': str(self.project / 'main.py'), 'command': 'python main.py'},
                    'error': 'Example failure', **fields}
         handler = HOOKS[event][0]['hooks'][0]
-        args = [handler['command']] + [a.replace('${CLAUDE_PLUGIN_ROOT}', str(self.plugin)) for a in handler['args']]
-        proc = subprocess.run(args, input=json.dumps(payload) if raw is None else raw,
+        proc = subprocess.run(self.hook_command(handler), input=json.dumps(payload) if raw is None else raw,
                               text=True, capture_output=True, env=self.env,
                               cwd=self.project, timeout=handler['timeout'])
         self.assertEqual(proc.returncode, 0, proc.stderr)

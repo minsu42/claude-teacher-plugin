@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Register the five hooks in the shell form (`bash "${CLAUDE_PLUGIN_ROOT}/hooks/<script>.sh"`) instead of the exec form (`command` plus `args`). The exec form resolves `bash` on `PATH`, where Windows usually finds the WSL launcher in `System32` before Git Bash, so every hook failed with exit status 127 on native Windows. The shell form runs through Git Bash there; macOS, Linux, and WSL behaviour is unchanged.
+- Parse the shell-form command in the hook tests and document Windows with Git Bash as a supported hook platform.
+
 ## 1.10.0
 
 - Start lessons after a topic and starting-level question; skip answers already supplied and leave personal preferences optional for later.

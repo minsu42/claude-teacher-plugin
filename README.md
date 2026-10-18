@@ -325,7 +325,7 @@ Each hook explicitly checks runtime availability, then validates the event and c
 
 Hooks require Bash and use **jq 1.6+**, falling back to installed **Python 3.8+** with its standard library when jq is missing or unusable. Both paths apply the same project and loop guards. If neither JSON tool works, the scripts exit quietly without touching student data; Claude is still instructed to handle the lesson and checkpoint new evidence through the skills.
 
-The hook scripts target macOS, Linux, and WSL. Native Windows without Bash has not been validated; the registered shell hooks cannot run there. The teaching instructions themselves do not require jq or Python. Setup does not ask learners to install tools to enable extra reminders.
+The hook scripts target macOS, Linux, WSL, and Windows with [Git Bash](https://git-scm.com/) installed (it ships with Git for Windows). Native Windows without any Bash cannot run the shell hooks. On Windows the hooks are registered in the shell form rather than the exec form on purpose: Claude Code runs shell-form commands through Git Bash, while the exec form looks up `bash` on `PATH`, where the WSL launcher in `System32` usually wins and fails with exit status 127. The teaching instructions themselves do not require jq or Python. Setup does not ask learners to install tools to enable extra reminders.
 
 For requested troubleshooting, [check-runtime.sh](hooks/check-runtime.sh) reports whether the hook helpers are usable. A successful check confirms tool availability; it does not prove hooks loaded or progress was saved. It is not part of normal onboarding.
 
